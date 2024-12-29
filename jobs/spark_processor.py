@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructField, DoubleType, LongType
 
+
 KAFKA_BROKERS = "kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
 SOURCE_TOPIC = 'financial_transactions'
 AGGREGATES_TOPIC = 'transaction_aggregates'
