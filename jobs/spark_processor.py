@@ -51,6 +51,41 @@ transactions_df = transactions_df.withColumn(
     "transactionTimestamp", (col("transactionTime") / 1000).cast("timestamp")
 )
 
+# ANAMOLIES
+
+# Define Anomaly Detection Rules
+transactions_df = transactions_df.withColumn(
+    "isHighAmount", col("amount") > 10000
+).withColumn(
+    "isUnexpectedCurrency", (col("currency") != "USD") & (col("currency") != "EUR")
+).withColumn(
+    "isAnomaly", col("isHighAmount") | col("isUnexpectedCurrency")
+)
+
+# Extract Anomalies
+anomalies_df = transactions_df.filter(col("isAnomaly") == True)
+
+# Write Anomalies to Kafka
+anomalies_query = anomalies_df \
+    .withColumn("key", col('transactionId').cast("string")) \
+    .withColumn("value", to_json(struct(
+        col("transactionId"),
+        col("userId"),
+        col("amount"),
+        col("merchantId"),
+        col("transactionTime"),
+        col("isHighAmount"),
+        col("isUnexpectedCurrency")
+    ))) \
+    .selectExpr("key", "value") \
+    .writeStream \
+    .format('kafka') \
+    .outputMode('append') \
+    .option('kafka.bootstrap.servers', KAFKA_BROKERS) \
+    .option('topic', ANOMALIES_TOPIC) \
+    .option('checkpointLocation', f'{CHECKPOINT_DIR}/anomalies') \
+    .start()
+
 
 aggregated_df = transactions_df.groupby("merchantId") \
     .agg(
