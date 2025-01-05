@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructField, DoubleType, LongType
+import time
 
 
 KAFKA_BROKERS = "kafka-broker-1:19092,kafka-broker-2:19092,kafka-broker-3:19092"
@@ -55,6 +56,13 @@ aggregated_df = transactions_df.groupby("merchantId") \
     .agg(
     sum("amount").alias('totalAmount'),
     count("*").alias("transactionCount"))
+    
+# Add before aggregation
+transactions_df.printSchema()
+transactions_df.writeStream \
+    .format("console") \
+    .outputMode("append") \
+    .start()
 
 aggregation_query = aggregated_df \
     .withColumn("key", col('merchantId').cast("string")) \
@@ -69,4 +77,9 @@ aggregation_query = aggregated_df \
     .option('kafka.bootstrap.servers', KAFKA_BROKERS) \
     .option('topic', AGGREGATES_TOPIC) \
     .option('checkpointLocation', f'{CHECKPOINT_DIR}/aggregates') \
-    .start().awaitTermination()
+    .start()
+    
+while True:
+    print(f"Active: {aggregation_query.isActive}")
+    print(f"Status: {aggregation_query.status}")
+    time.sleep(10)

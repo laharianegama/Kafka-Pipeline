@@ -23,7 +23,7 @@ public class TransactionProducer {
     private static final Logger logger = LoggerFactory.getLogger(TransactionProducer.class);
     private static final String TOPIC = "financial_transactions";
     private static final String BOOTSTRAP_SERVERS = "localhost:29092,localhost:39092,localhost:49092";
-    private static final int NUM_THREADS = 3;
+    private static final int NUM_THREADS = 1;
     private static final int NUM_PARTITIONS = 5;  // Define the number of partitions
     private static final short REPLICATION_FACTOR = 3;  // Define the replication factor
 
