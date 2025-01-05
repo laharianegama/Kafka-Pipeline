@@ -206,6 +206,28 @@ services:
   spark-worker-3:
     <<: *spark-worker-image
 
+  prometheus:
+    image: prom/prometheus:v3.0.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+    depends_on:
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
+    networks:
+      - layahari2412
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    ports:
+      - "59093:9093"
+    networks:
+      - layahari2412
+
 volumes:
   controller_data_1:
   controller_data_2:
